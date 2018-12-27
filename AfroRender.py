@@ -8,171 +8,178 @@ bpy.types.Scene.use_widget = bpy.props.BoolProperty(name = "Use Widget", descrip
                 
 #Creates a particle system if one doesn't already exist 
 def get_particle_system(context):
-	if(context.object.particle_systems):
-		print("This object already has a particle system")
-		
-	else:
-		bpy.ops.object.particle_system_add()
-		ps = context.object.particle_systems[0]
-		
-		if ps.settings.use_advanced_hair != True:
-			ps.settings.use_advanced_hair = True
-			ps.settings.factor_random = 0.3
+    if(context.object.particle_systems):
+        print("This object already has a particle system")
+        
+    else:
+        bpy.ops.object.particle_system_add()
+        ps = context.object.particle_systems[0]
+        
+        if ps.settings.use_advanced_hair != True:
+            ps.settings.use_advanced_hair = True
+            ps.settings.factor_random = 0.3
 
-		ps.settings.type = 'HAIR'
-		ps.settings.child_type = 'INTERPOLATED'
-		ps.settings.draw_step = 7
-		ps.settings.render_step = 7
-		ps.settings.kink = 'CURL'
-		ps.settings.kink_frequency = 30
-		ps.settings.kink_amplitude = 0.04
-		ps.settings.count = 100
-		ps.settings.hair_length = 1
-		ps.settings.roughness_2 = 0.9
-		ps.settings.roughness_1 = 0.1
-		ps.settings.roughness_2_size = 1.0
-		ps.settings.roughness_endpoint = 0.4
-		ps.settings.roughness_end_shape = 1.0
+        ps.settings.type = 'HAIR'
+        ps.settings.child_type = 'INTERPOLATED'
+        ps.settings.draw_step = 7
+        ps.settings.render_step = 7
+        ps.settings.kink = 'CURL'
+        ps.settings.kink_frequency = 30
+        ps.settings.kink_amplitude = 0.04
+        ps.settings.count = 100
+        ps.settings.hair_length = 1
+        ps.settings.roughness_2 = 0.9
+        ps.settings.roughness_1 = 0.1
+        ps.settings.roughness_2_size = 1.0
+        ps.settings.roughness_endpoint = 0.4
+        ps.settings.roughness_end_shape = 1.0
 
 #creates a new nodegroup for the curve widget interactive UI element 
 def make_node_group(name):
-	if 'frq_amp' not in bpy.data.node_groups:
-			new_curve_widget = bpy.data.node_groups.new('frq_amp', 'ShaderNodeTree')
-			new_curve_widget.fake_user = True 
+    if 'frq_amp' not in bpy.data.node_groups:
+            new_curve_widget = bpy.data.node_groups.new('frq_amp', 'ShaderNodeTree')
+            new_curve_widget.fake_user = True 
 
 
 #add and initialize a Shader Node RGB Curve to node group (only used for hair mapping, not RGB values)
 all_nodes={}
 def get_node(name):
 
-	group = bpy.data.node_groups[0].nodes
-	if name not in all_nodes:
-		new_node = group.new('ShaderNodeRGBCurve')
-		all_nodes[name] = new_node.name
+    group = bpy.data.node_groups[0].nodes
+    if name not in all_nodes:
+        new_node = group.new('ShaderNodeRGBCurve')
+        all_nodes[name] = new_node.name
 
-	group[all_nodes[name]].mapping.initialize()
-	return group[all_nodes[name]] 
+    group[all_nodes[name]].mapping.initialize()
+    return group[all_nodes[name]] 
 
 #Hair Charting Function - Maps user input to value inputs for curl frequency and amplitude 
 def create_hair_type(hair_chart):
-	ps = bpy.context.object.particle_systems[0]
-	
-	if hair_chart == "0":
-		print("2A")
-		ps.settings.kink_frequency = 1
-		ps.settings.kink_amplitude = 0.04
-		
-	elif hair_chart == "1":
-		print("2B")
-		ps.settings.kink_frequency = 10
-		ps.settings.kink_amplitude = 0.04
-		
-	elif hair_chart == "2":
-		print ("2C")
-		ps.settings.kink_frequency = 10
-		ps.settings.kink_amplitude = 0.1
-		
-	elif hair_chart == "3":
-		print ("3A")
-		ps.settings.kink_frequency = 9
-		ps.settings.kink_amplitude = 0.25
-		
-	elif hair_chart == "4":
-		print ("3B")
-		ps.settings.kink_frequency = 15
-		ps.settings.kink_amplitude = 0.15
-		
-	elif hair_chart == "5":
-		print ("3C")
-		ps.settings.kink_frequency = 25
-		ps.settings.kink_amplitude = 0.08
-		
-	elif hair_chart == "6":
-		print("4A")
-		ps.settings.kink_frequency = 40
-		ps.settings.kink_amplitude = 0.08
-		
-	elif hair_chart == "7":
-		print ("4B")
-		ps.settings.kink_frequency = 80
-		ps.settings.kink_amplitude = 0.05
-		
-	elif hair_chart == "8":
-		print ("4C")
-		ps.settings.kink_frequency = 50
-		ps.settings.kink_amplitude = 0.03 
-	
+    ps = bpy.context.object.particle_systems[0]
+    
+    if hair_chart == "0":
+        print("2A")
+        ps.settings.kink_frequency = 1
+        ps.settings.kink_amplitude = 0.04
+        
+    elif hair_chart == "1":
+        print("2B")
+        ps.settings.kink_frequency = 10
+        ps.settings.kink_amplitude = 0.04
+        
+    elif hair_chart == "2":
+        print ("2C")
+        ps.settings.kink_frequency = 10
+        ps.settings.kink_amplitude = 0.1
+        
+    elif hair_chart == "3":
+        print ("3A")
+        ps.settings.kink_frequency = 9
+        ps.settings.kink_amplitude = 0.25
+        
+    elif hair_chart == "4":
+        print ("3B")
+        ps.settings.kink_frequency = 15
+        ps.settings.kink_amplitude = 0.15
+        
+    elif hair_chart == "5":
+        print ("3C")
+        ps.settings.kink_frequency = 25
+        ps.settings.kink_amplitude = 0.08
+        
+    elif hair_chart == "6":
+        print("4A")
+        ps.settings.kink_frequency = 40
+        ps.settings.kink_amplitude = 0.08
+        
+    elif hair_chart == "7":
+        print ("4B")
+        ps.settings.kink_frequency = 80
+        ps.settings.kink_amplitude = 0.05
+        
+    elif hair_chart == "8":
+        print ("4C")
+        ps.settings.kink_frequency = 50
+        ps.settings.kink_amplitude = 0.03 
+    
 #creates UI for AfroRender 
 class AfroRenderPanel (bpy.types.Panel):
-	"""Display Hair Type Choices"""
+    """Display Hair Type Choices"""
     
-	bl_label = "AfroRender"
-	bl_space_type = 'PROPERTIES'
-	bl_idname = "OBJECT_PT_hello" 
-	bl_region_type = 'WINDOW'
-	bl_context = "particle"
+    bl_label = "AfroRender"
+    bl_space_type = 'PROPERTIES'
+    bl_idname = "OBJECT_PT_hello" 
+    bl_region_type = 'WINDOW'
+    bl_context = "particle"
 
-	def draw(self, context):
-		layout = self.layout
-		NaturalHair = layout.row()
-		NaturalHair.label(text = "Natural Hair")
-		NaturalHair.operator("object.natural_hair", text = "Natural Hair")
+    def draw(self, context):
+        layout = self.layout
+        NaturalHair = layout.row()
+        NaturalHair.label(text = "Natural Hair")
+        NaturalHair.operator("object.natural_hair", text = "Natural Hair")
 
-		chart_row = layout.row(align =True)
-		chart_row.prop(context.scene, 'hair_chart', expand = True)    
+        chart_row = layout.row(align =True)
+        chart_row.prop(context.scene, 'hair_chart', expand = True)    
 
-		scene = bpy.data.scenes["Scene"]
-		row = layout.row(align=True)
-		row.prop(context.scene, "use_widget")
-		
-		if scene.use_widget == True: 
-			make_node_group('frq_amp')
-			node = get_node('frq_amp_curve')
-			self.layout.template_curve_mapping(node, "mapping")
-			row = layout.row()
-			row.operator("object.hair_curve", text="Widget Control")
+        scene = bpy.data.scenes["Scene"]
+        row = layout.row(align=True)
+        row.prop(context.scene, "use_widget")
+        
+        if scene.use_widget == True: 
+            make_node_group('frq_amp')
+            node = get_node('frq_amp_curve')
+            self.layout.template_curve_mapping(node, "mapping")
+            row = layout.row()
+            row.operator("object.hair_curve", text="Widget Control")
             
-		Braids = layout.row()
-		Braids.label(text = "Generate Braids")
-		Braids.operator("object.braids", text = "Braided Hair")
+        Braids = layout.row()
+        Braids.label(text = "Generate Braids")
+        Braids.operator("object.braids", text = "Braided Hair")
 
-def get_frizz (frizz_val, uniform_val, clump_val, context):
-	print ("Create Frizziness")
-	ps = bpy.context.object.particle_systems[0].settings
-	if (frizz_val != 0):
+def get_frizz (frizz_val, uniform_val, clump_val, thickness, context):
+    print ("Create Frizziness")
+    ps = bpy.context.object.particle_systems[0].settings
+    if (frizz_val > 0):
 
-		ps = bpy.context.object.particle_systems[0].settings
-		ps.roughness_2 += frizz_val  + 0.1 
-		ps.roughness_2_size +=  frizz_val 
-		ps.roughness_1 += frizz_val  
-		ps.roughness_endpoint += frizz_val / 2
-		ps.roughness_2_size -= frizz_val  
+        
+        ps.roughness_2 += frizz_val  + 0.5
+        ps.roughness_2_size +=  frizz_val 
+        ps.roughness_1 += frizz_val  
+        ps.roughness_endpoint += frizz_val / 2
+        ps.roughness_2_size -= frizz_val  
+    
+    elif (frizz_val < 0): 
+        ps.roughness_2 -= frizz_val  + 1 
+        ps.roughness_2_size -=  frizz_val 
+        ps.roughness_1 -= frizz_val  
+        ps.roughness_endpoint -= frizz_val / 2
+        ps.roughness_2_size += frizz_val  
 
-	# elif (uniform_val != 0) : 
-	# 	ps.factor_random = uniform_val
-	# 	ps.roughness_endpoint = uniform_val / 2.0 
-	
-	# elif (clump_val != 0):
-	# 	#ps.kink_amplitude += 0.1
-	# 	ps.child_parting_factor = 1.0 
-	# 	#ps.
+    if (uniform_val > 0) : 
+        ps.factor_random = uniform_val
+        ps.roughness_endpoint = uniform_val / 2.0 
+    
+    if(clump_val > 0):
+        ps.clump_factor = 1.0
+        ps.clump_shape = 0.5
+
+    if(thickness > 0): 
+        ps.count = thickness * 1000
 
 
 
 
-
-
-	
+    
 
 #executes hair charting
 class AfroRender_NaturalHair(bpy.types.Operator):
 
-	bl_idname = "object.natural_hair"
-	bl_label = "Create Natural Hair Particle System"
-	bl_options = {'REGISTER', 'UNDO', 'PRESET'}
-	#use_widget = bpy.props.BoolProperty(name = "Use Widget", description = "Use the Curve Widget to get Hair StrandFrequency/Amplitude", default = False)
+    bl_idname = "object.natural_hair"
+    bl_label = "Create Natural Hair Particle System"
+    bl_options = {'REGISTER', 'UNDO', 'PRESET'}
+    #use_widget = bpy.props.BoolProperty(name = "Use Widget", description = "Use the Curve Widget to get Hair StrandFrequency/Amplitude", default = False)
 
-	hair_chart = bpy.props.EnumProperty(
+    hair_chart = bpy.props.EnumProperty(
                                 name = "Hair Chart",
                                 default = "8",
                                 description = "Hair Charting" ,
@@ -189,65 +196,65 @@ class AfroRender_NaturalHair(bpy.types.Operator):
                                     ]
                             )
 
-	use_materials = bpy.props.BoolProperty(name = "Use Materials",  description = "Add Natural Hair Shader", default = True)
-	frizziness = bpy.props.FloatProperty(name = "Frizziness", description = "Decrease to create promient coils", min = 0.0, max = 1.0, default = 0.1)
-	length_uniformity = bpy.props.FloatProperty(name = "Length Uniformity", description = "Increase for less randomness", min = 0.0, max = 1.0, default = 1.0)
-	coiliness = bpy.props.FloatProperty(name = "Coiliness", description = "Increase for more adhesive curls", min = 0.0, max = 1.0, default = 1.0)
+    use_materials = bpy.props.BoolProperty(name = "Use Materials",  description = "Add Natural Hair Shader", default = True)
+    frizziness = bpy.props.FloatProperty(name = "Frizziness", description = "Decrease to create promient coils", min = -1.0, max = 1.0, default = 0.0)
+    length_uniformity = bpy.props.FloatProperty(name = "Length Uniformity", description = "Increase for less randomness", min = 0.0, max = 1.0, default = 0.25)
+    coiliness = bpy.props.FloatProperty(name = "Coiliness", description = "Increase for more adhesive curls", min = 0.0, max = 1.0, default = 0.0)
+    thickness = bpy.props.FloatProperty(name = "Thickness", description = "Thickness of the Afro", min = 0.0, max = 1.0, default = 0.5)
+
+    def execute(self, context):
+        scene = bpy.data.scenes["Scene"]
+        get_particle_system(context) 
+        create_hair_type(self.hair_chart)
+        get_frizz(self.frizziness, self.length_uniformity, self.coiliness, self.thickness, context)
 
 
-	def execute(self, context):
-		scene = bpy.data.scenes["Scene"]
-		get_particle_system(context) 
-		create_hair_type(self.hair_chart)
-		get_frizz(self.frizziness, self.length_uniformity, self.coiliness, context)
 
-
-
-		#swidget_boolean = self.use_widget
-		print ("natural hair button pressed")
+        #swidget_boolean = self.use_widget
+        print ("natural hair button pressed")
     
-		return {'FINISHED'}
+        return {'FINISHED'}
 
 #maps curve widget to hair frequency/amplitude parameters 
 class AfroRender_CurveWidget(bpy.types.Operator):
-	"""Correlate Hair and Curve Widget"""
-	bl_idname = "object.hair_curve"
-	bl_label = "Control Hair Frequency and Amplitude with Curve Widget"
-	bl_options = {'REGISTER', 'UNDO'}
-	def execute(self, context):
-		index = len(bpy.data.node_groups[0].nodes) - 1
-		curve_widget = bpy.data.node_groups[0].nodes[index].mapping.curves[3]
+    """Correlate Hair and Curve Widget"""
+    bl_idname = "object.hair_curve"
+    bl_label = "Control Hair Frequency and Amplitude with Curve Widget"
+    bl_options = {'REGISTER', 'UNDO'}
+    def execute(self, context):
+        index = len(bpy.data.node_groups[0].nodes) - 1
+        curve_widget = bpy.data.node_groups[0].nodes[index].mapping.curves[3]
 
-		frequency = curve_widget.points[1].location.x
-		amplitude = curve_widget.points[1].location.y
+        frequency = curve_widget.points[1].location.x
+        amplitude = curve_widget.points[1].location.y
 
-		particle_sys = context.object.particle_systems[0]
-	 
-		particle_sys.settings.kink_frequency = frequency * 100 
-		particle_sys.settings.kink_amplitude = amplitude / 5
+        particle_sys = context.object.particle_systems[0]
+     
+        particle_sys.settings.kink_frequency = frequency * 100 
+        particle_sys.settings.kink_amplitude = amplitude / 5
 
-		print(frequency)
-		print(amplitude)
+        print(frequency)
+        print(amplitude)
 
-		return {'FINISHED'}
+        return {'FINISHED'}
 
 #coming soon! 
 class AfroRender_Braiding(bpy.types.Operator):
 
-	bl_idname = "object.braids"
-	bl_label = "Create Braided Particle System"
-	bl_options = {'REGISTER', 'UNDO'}
+    bl_idname = "object.braids"
+    bl_label = "Create Braided Particle System"
+    bl_options = {'REGISTER', 'UNDO'}
 
-	def execute(self, context):
+    def execute(self, context):
 
-		print ("braided button pressed")
-		return {'FINISHED'}
+        print ("braided button pressed")
+        return {'FINISHED'}
 
 
 def register():
-	bpy.utils.register_class(AfroRenderPanel)
-	bpy.utils.register_class(AfroRender_NaturalHair)
-	bpy.utils.register_class(AfroRender_Braiding)
-	bpy.utils.register_class(AfroRender_CurveWidget)
-		
+    bpy.utils.register_class(AfroRenderPanel)
+    bpy.utils.register_class(AfroRender_NaturalHair)
+    bpy.utils.register_class(AfroRender_Braiding)
+    bpy.utils.register_class(AfroRender_CurveWidget)
+        
 register()
