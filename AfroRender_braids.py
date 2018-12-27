@@ -88,12 +88,20 @@ def get_curve_midpoint(braid, curve, length):
     braid.location[2] = curve.location[2]
     print("post:") 
     print(braid.location[1])
-       
+
+def wrap_to_obj(curve, target_obj):
+    shrinkwrap = curve.modifiers.new("ShrinkWrap", 'SHRINKWRAP')
+    shrinkwrap.target = bpy.data.objects[target_obj]
+
+    shrinkwrap.modifier_apply()
+
         
 def braid_on_curve(braid_obj, curve, length):
     
     #bpy.ops.object.convert(target='MESH')
+
     curve_mod = braid_obj.modifiers.new("Curve", 'CURVE')
+
     #if (curve == ""):
         
     #    #name = bpy.data.curves[0].name
@@ -109,7 +117,7 @@ def braid_on_curve(braid_obj, curve, length):
     else: 
         print("Please enter the name of a curve in this scene") 
         
-        
+
 def edgeloop_convert(name, num_braids, to_braid): 
     #go into editmode
     toggle() 
@@ -119,22 +127,7 @@ def edgeloop_convert(name, num_braids, to_braid):
         print(i)
         print (to_braid.data.edges[i].select) 
         bpy.ops.mesh.duplicate_move(MESH_OT_duplicate={"mode": 1}, TRANSFORM_OT_translate={"value":(0, 0, 0), "constraint_axis":(False, False, False), "constraint_orientation":'GLOBAL', "mirror":False, "proportional":'DISABLED', "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False})
-        #bpy.ops.mesh.separate(type='SELECTED')
-        #to_braid.data.edges[i].select = False
-        #edge.select = False
-        
-    #select an edge loop on the mesh
-    #bpy.ops.mesh.loopcut_slide(MESH_OT_loopcut={"number_cuts":num_braids, "smoothness":0, "edge_index":3, "mesh_select_mode_init":(False, True, False)}, TRANSFORM_OT_edge_slide={"value":0, "single_side":False})
-    #
     
-    #duplicate that edgeloop
-    #bpy.ops.mesh.duplicate_move(MESH_OT_duplicate={"mode":1}, TRANSFORM_OT_translate={"value":(0, 0, 0.1), "constraint_axis":(False, False, False), "constraint_orientation":'GLOBAL', "mirror":False, "proportional":'DISABLED', "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False})
-    #separate that edgeloop from mesh
-    
-    #toggle()  
-    #convert edge loop to nurbs path 
-    
-    #rename edgeloop and input to curve mod 
     print("pop") 
     
 def clear():
@@ -246,7 +239,7 @@ def generate_single_braid(braid_name, num_strands, length, x_width, height, y_wi
     name = 'circle.%d' % num_braids   
     pts = [(-strand_width/2, 0, 0), (0, -strand_height/2, 0), (strand_width/2, 0, 0), (0, strand_height/2, 0)]
     spline(name, name, pts, pts, False)
-    make_braid(braid_name, 3, length, x_width, y_width, height, taper=True, bevel=name)
+    make_braid(braid_name, num_strands, length, x_width, y_width, height, taper=True, bevel=name)
     
 def get_curvemidpoint(curve):
     print(curve.data.splines.points)
@@ -271,9 +264,9 @@ class Braid(bpy.types.Operator):
     
     strand_width = FloatProperty(name = 'Strand Width', min =0.1, max = 1.0, default = 0.6)
     strand_height = FloatProperty(name = 'Strand Height', min =0.1, max= 1.0, default = 0.6)
-    object_to_braid_name = StringProperty(name = 'Object to Braid', default = '') 
+    target_obj = StringProperty(name = 'Object to Braid', default = 'Group49317') 
     scale = FloatProperty(name = 'Scale', min =0.1, max = 5.0, default = 1)
-    
+    wrap = BoolProperty(name = 'Wrap Curve', default = True) 
     
     braiding_type = bpy.props.EnumProperty(
                                 name = "Braid Placement",
@@ -314,6 +307,7 @@ class Braid(bpy.types.Operator):
             
         if self.braiding_type == "0": 
             print(curve)
+            #wrap_to_obj(curve, self.target_obj) 
             braid_on_curve(obj, curve, save_len)
             
             #get_length(context)
@@ -356,7 +350,7 @@ class BraidButton (bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         col = layout.column(align=True)
-        col.operator("mesh.make_braid", text = "test braid")
+        col.operator("mesh.make_braid", text = "Create Braid Along Curve")
 
 
 def register():
