@@ -168,6 +168,42 @@ def get_frizz (frizz_val, uniform_val, clump_val, thickness, context):
 
 
 
+def get_simulation(context, hair_chart):
+    ps = bpy.context.object.particle_systems[0]
+    #hair_chart = int(hair_chart)
+    print(hair_chart[0])
+    print("Computing Simulation Parameters...") 
+    ps.settings.render_type = 'PATH'
+    ps.use_hair_dynamics = True 
+    ps.settings.child_nbr = 4
+    sim_settings = ps.cloth.settings
+    #stiffness= ps.cloth.settings.bending_stiffness
+    ps.cloth.settings.quality = 9 
+
+    if(hair_chart == "0" or hair_chart == "1" or hair_chart == "2"):
+        sim_settings.bending_stiffness = 0.38
+        #sim_settings.bending_damping = 0.7
+        #sim_settings.pin_stiffness = 0.1
+        sim_settings.mass = 0.3
+
+    elif (hair_chart == "3" or hair_chart == "4" or hair_chart == "5"):
+        sim_settings.bending_stiffness = 0.5
+        sim_settings.bending_damping = 0.9
+        sim_settings.pin_stiffness = 0.5
+        sim_settings.mass = 0.2
+        print("second iteration")
+
+    elif (hair_chart == "6" or hair_chart == "7" or hair_chart == "8"):
+        sim_settings.bending_stiffness = 1
+        sim_settings.pin_stiffness = 1
+        sim_settings.bending_damping = 1
+        sim_settings.mass = 0.1
+        print("third iteration")
+
+
+
+
+
 
     
 
@@ -197,6 +233,7 @@ class AfroRender_NaturalHair(bpy.types.Operator):
                             )
 
     use_materials = bpy.props.BoolProperty(name = "Use Materials",  description = "Add Natural Hair Shader", default = True)
+    use_simulation = bpy.props.BoolProperty(name = "Simulation Presets",  description = "Create Simulated Afro", default = True)
     frizziness = bpy.props.FloatProperty(name = "Frizziness", description = "Decrease to create promient coils", min = -1.0, max = 1.0, default = 0.0)
     length_uniformity = bpy.props.FloatProperty(name = "Length Uniformity", description = "Increase for less randomness", min = 0.0, max = 1.0, default = 0.25)
     coiliness = bpy.props.FloatProperty(name = "Coiliness", description = "Increase for more adhesive curls", min = 0.0, max = 1.0, default = 0.0)
@@ -207,6 +244,10 @@ class AfroRender_NaturalHair(bpy.types.Operator):
         get_particle_system(context) 
         create_hair_type(self.hair_chart)
         get_frizz(self.frizziness, self.length_uniformity, self.coiliness, self.thickness, context)
+        if(self.use_simulation == True):
+
+            get_simulation(context, self.hair_chart)
+
 
 
 
