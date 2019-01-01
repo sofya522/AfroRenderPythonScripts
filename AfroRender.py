@@ -23,6 +23,7 @@ def get_particle_system(context):
         ps.settings.child_type = 'INTERPOLATED'
         ps.settings.draw_step = 7
         ps.settings.render_step = 7
+        ps.settings.hair_step = 10; 
         ps.settings.kink = 'CURL'
         ps.settings.kink_frequency = 30
         ps.settings.kink_amplitude = 0.04
@@ -33,6 +34,7 @@ def get_particle_system(context):
         ps.settings.roughness_2_size = 1.0
         ps.settings.roughness_endpoint = 0.4
         ps.settings.roughness_end_shape = 1.0
+        ps.settings.rendered_child_count = 50 
 
 #creates a new nodegroup for the curve widget interactive UI element 
 def make_node_group(name):
@@ -118,8 +120,8 @@ class AfroRenderPanel (bpy.types.Panel):
         NaturalHair.label(text = "Natural Hair")
         NaturalHair.operator("object.natural_hair", text = "Natural Hair")
 
-        chart_row = layout.row(align =True)
-        chart_row.prop(context.scene, 'hair_chart', expand = True)    
+        # chart_row = layout.row(align =True)
+        # chart_row.prop(context.scene, 'hair_chart', expand = True)    
 
         scene = bpy.data.scenes["Scene"]
         row = layout.row(align=True)
@@ -177,8 +179,9 @@ def get_simulation(context, hair_chart):
     ps.use_hair_dynamics = True 
     ps.settings.child_nbr = 4
     sim_settings = ps.cloth.settings
+    sim_settings.quality = 50;
     #stiffness= ps.cloth.settings.bending_stiffness
-    ps.cloth.settings.quality = 9 
+    
 
     if(hair_chart == "0" or hair_chart == "1" or hair_chart == "2"):
         sim_settings.bending_stiffness = 0.38
@@ -201,6 +204,13 @@ def get_simulation(context, hair_chart):
         print("third iteration")
 
 
+
+def get_vertex_group(context):
+    ps = context.object.particle_systems[0]
+    print("in vertex group function...")
+    print(ps.vertex_group_density) 
+    if len(context.object.vertex_groups) > 0:
+        ps.vertex_group_density = context.object.vertex_groups[0].name
 
 
 
@@ -234,6 +244,7 @@ class AfroRender_NaturalHair(bpy.types.Operator):
 
     use_materials = bpy.props.BoolProperty(name = "Use Materials",  description = "Add Natural Hair Shader", default = True)
     use_simulation = bpy.props.BoolProperty(name = "Simulation Presets",  description = "Create Simulated Afro", default = True)
+    use_vertex_group = bpy.props.BoolProperty(name = "Use Vertex Group",  description = "Only display Afro on a Specified Vertex Group", default = False)
     frizziness = bpy.props.FloatProperty(name = "Frizziness", description = "Decrease to create promient coils", min = -1.0, max = 1.0, default = 0.0)
     length_uniformity = bpy.props.FloatProperty(name = "Length Uniformity", description = "Increase for less randomness", min = 0.0, max = 1.0, default = 0.25)
     coiliness = bpy.props.FloatProperty(name = "Coiliness", description = "Increase for more adhesive curls", min = 0.0, max = 1.0, default = 0.0)
@@ -249,6 +260,9 @@ class AfroRender_NaturalHair(bpy.types.Operator):
             get_simulation(context, self.hair_chart)
 
 
+        if (self.use_vertex_group == True):
+            
+            get_vertex_group(context) 
 
 
         #swidget_boolean = self.use_widget
