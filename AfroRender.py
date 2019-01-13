@@ -255,6 +255,7 @@ class AfroRender_NaturalHair(bpy.types.Operator):
         get_particle_system(context) 
         create_hair_type(self.hair_chart)
         get_frizz(self.frizziness, self.length_uniformity, self.coiliness, self.thickness, context)
+        
         if(self.use_simulation == True):
 
             get_simulation(context, self.hair_chart)
