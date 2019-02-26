@@ -27,7 +27,9 @@ def  part_hair_along_points (curve_points, context, strength, radius):
     radius = radius / 10 
     print(radius)
     shortest_distance =100 
+    #strength = strength / 2
     print('strength: {i}'.format(i=strength))
+
     prev_shortest = shortest_distance
     for p in range (len(curve_points)):
        hairs = context.object.particle_systems[0].particles

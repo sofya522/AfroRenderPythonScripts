@@ -4,37 +4,64 @@ import bpy
 widget_boolean = False 
 bpy.types.Scene.use_widget = bpy.props.BoolProperty(name = "Use Widget", description = "Use the Curve Widget to get Hair StrandFrequency/Amplitude", default = False)
 #Hair Chart - Maps all types of hair to menu that the user can see 
+global_afro_count = 0 
+def count_Afros(context):
+    if(context.object.particle_systems == False):
+        return 0; 
+    
+    else:
 
-                
+        Afro_num = 0; 
+        for ps in range (len(context.object.particle_systems)):
+            if "Afro" in context.object.particle_systems[ps].name:
+                Afro_num += 1; 
+
+        global_afro_count = Afro_num
+        if(global_afro_count == 0):
+            return len(context.object.particle_systems)
+
+        return Afro_num 
+    return 0; 
+
+
 #Creates a particle system if one doesn't already exist 
 def get_particle_system(context):
-    if(context.object.particle_systems):
-        print("This object already has a particle system")
-        
-    else:
-        bpy.ops.object.particle_system_add()
-        ps = context.object.particle_systems[0]
-        
-        if ps.settings.use_advanced_hair != True:
-            ps.settings.use_advanced_hair = True
-            ps.settings.factor_random = 0.3
+    
+    print("This object already has a particle system")
+    #print(context.object.particle_systems[0].name)
 
-        ps.settings.type = 'HAIR'
-        ps.settings.child_type = 'INTERPOLATED'
-        ps.settings.draw_step = 7
-        ps.settings.render_step = 7
-        ps.settings.hair_step = 10; 
-        ps.settings.kink = 'CURL'
-        ps.settings.kink_frequency = 30
-        ps.settings.kink_amplitude = 0.04
-        ps.settings.count = 100
-        ps.settings.hair_length = 1
-        ps.settings.roughness_2 = 0.9
-        ps.settings.roughness_1 = 0.1
-        ps.settings.roughness_2_size = 1.0
-        ps.settings.roughness_endpoint = 0.4
-        ps.settings.roughness_end_shape = 1.0
-        ps.settings.rendered_child_count = 50 
+    Afro_count = count_Afros(context)
+    print(Afro_count)
+    new_ps_name = "Afro %d" % Afro_count
+    print(new_ps_name)
+
+    bpy.ops.object.particle_system_add()
+    ps = context.object.particle_systems[Afro_count]
+    ps.name = new_ps_name
+        
+    if ps.settings.use_advanced_hair != True:
+        ps.settings.use_advanced_hair = True
+        ps.settings.factor_random = 0.3
+
+    ps.settings.type = 'HAIR'
+    ps.settings.child_type = 'INTERPOLATED'
+    ps.settings.draw_step = 7
+    ps.settings.render_step = 7
+    ps.settings.hair_step = 10; 
+    ps.settings.kink = 'CURL'
+    ps.settings.kink_frequency = 30
+    ps.settings.kink_amplitude = 0.04
+    ps.settings.count = 100
+    ps.settings.hair_length = 0.3
+    ps.settings.roughness_2 = 0.9
+    ps.settings.roughness_1 = 0.1
+    ps.settings.roughness_2_size = 1.0
+    ps.settings.roughness_endpoint = 0.4
+    ps.settings.roughness_end_shape = 1.0
+    ps.settings.rendered_child_count = 50 
+
+        
+    
 
 #creates a new nodegroup for the curve widget interactive UI element 
 def make_node_group(name):
@@ -56,8 +83,13 @@ def get_node(name):
     return group[all_nodes[name]] 
 
 #Hair Charting Function - Maps user input to value inputs for curl frequency and amplitude 
-def create_hair_type(hair_chart):
-    ps = bpy.context.object.particle_systems[0]
+def create_hair_type(hair_chart, context):
+    global_afro_count = count_Afros(context)
+    print("Global AfroCount:")
+    print(global_afro_count)
+    print("Num PS:")
+    print(len(bpy.context.object.particle_systems))
+    ps = bpy.context.object.particle_systems[global_afro_count - 1]
     
     if hair_chart == "0":
         print("2A")
@@ -140,7 +172,8 @@ class AfroRenderPanel (bpy.types.Panel):
 
 def get_frizz (frizz_val, uniform_val, clump_val, thickness, context):
     print ("Create Frizziness")
-    ps = bpy.context.object.particle_systems[0].settings
+    global_afro_count = count_Afros(context)
+    ps = bpy.context.object.particle_systems[global_afro_count - 1].settings
     if (frizz_val > 0):
 
         
@@ -171,15 +204,16 @@ def get_frizz (frizz_val, uniform_val, clump_val, thickness, context):
 
 
 def get_simulation(context, hair_chart):
-    ps = bpy.context.object.particle_systems[0]
+    global_afro_count = count_Afros(context)
+    ps = bpy.context.object.particle_systems[global_afro_count - 1]
     #hair_chart = int(hair_chart)
     print(hair_chart[0])
     print("Computing Simulation Parameters...") 
-    ps.settings.render_type = 'PATH'
     ps.use_hair_dynamics = True 
     ps.settings.child_nbr = 4
     sim_settings = ps.cloth.settings
     sim_settings.quality = 50;
+    ps.settings.render_type = 'PATH'
     #stiffness= ps.cloth.settings.bending_stiffness
     
 
@@ -205,12 +239,14 @@ def get_simulation(context, hair_chart):
 
 
 
-def get_vertex_group(context):
-    ps = context.object.particle_systems[0]
+def get_vertex_group(context, group_ind):
+    global_afro_count = count_Afros(context)
+    ps = context.object.particle_systems[global_afro_count - 1]
     print("in vertex group function...")
     print(ps.vertex_group_density) 
     if len(context.object.vertex_groups) > 0:
-        ps.vertex_group_density = context.object.vertex_groups[0].name
+        ps.settings.render_type = 'PATH'
+        ps.vertex_group_density = context.object.vertex_groups[group_ind].name
 
 
 
@@ -244,7 +280,9 @@ class AfroRender_NaturalHair(bpy.types.Operator):
 
     use_materials = bpy.props.BoolProperty(name = "Use Materials",  description = "Add Natural Hair Shader", default = True)
     use_simulation = bpy.props.BoolProperty(name = "Simulation Presets",  description = "Create Simulated Afro", default = True)
-    use_vertex_group = bpy.props.BoolProperty(name = "Use Vertex Group",  description = "Only display Afro on a Specified Vertex Group", default = False)
+    use_vertex_group = bpy.props.BoolProperty(name = "Use Vertex Group",  description = "Only display Afro on a Specified Vertex Group", default = True)
+    group_num = bpy.props.IntProperty(name = "Vertex Group Index", description = "Whichever Vertex Group Artist wants to Afro-ize", default = 0, min= 0)
+
     frizziness = bpy.props.FloatProperty(name = "Frizziness", description = "Decrease to create promient coils", min = -1.0, max = 1.0, default = 0.0)
     length_uniformity = bpy.props.FloatProperty(name = "Length Uniformity", description = "Increase for less randomness", min = 0.0, max = 1.0, default = 0.25)
     coiliness = bpy.props.FloatProperty(name = "Coiliness", description = "Increase for more adhesive curls", min = 0.0, max = 1.0, default = 0.0)
@@ -253,7 +291,7 @@ class AfroRender_NaturalHair(bpy.types.Operator):
     def execute(self, context):
         scene = bpy.data.scenes["Scene"]
         get_particle_system(context) 
-        create_hair_type(self.hair_chart)
+        create_hair_type(self.hair_chart, context)
         get_frizz(self.frizziness, self.length_uniformity, self.coiliness, self.thickness, context)
         
         if(self.use_simulation == True):
@@ -263,7 +301,7 @@ class AfroRender_NaturalHair(bpy.types.Operator):
 
         if (self.use_vertex_group == True):
             
-            get_vertex_group(context) 
+            get_vertex_group(context, self.group_num) 
 
 
         #swidget_boolean = self.use_widget
