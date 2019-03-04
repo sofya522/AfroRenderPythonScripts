@@ -1,4 +1,5 @@
 import bpy
+import math
 
 #boolean for if the artist wants to use a curve widget rather than buttons 
 widget_boolean = False 
@@ -23,9 +24,80 @@ def count_Afros(context):
         return Afro_num 
     return 0; 
 
+def get_Afro(ps):
+
+    if ps.settings.use_advanced_hair != True:
+            ps.settings.use_advanced_hair = True
+            ps.settings.factor_random = 0.3
+
+    ps.settings.type = 'HAIR'
+    ps.settings.child_type = 'SIMPLE'
+    ps.settings.draw_step = 9
+    ps.settings.render_step = 9
+    ps.settings.hair_step = 50; 
+    ps.settings.kink = 'CURL'
+    ps.settings.kink_frequency = 30
+    ps.settings.kink_amplitude = 0.04
+    ps.settings.count = 100
+    ps.settings.hair_length = 0.3
+        #randomness
+    ps.settings.roughness_2 = 0.2
+    ps.settings.roughness_1 = 0.1
+    ps.settings.roughness_2_size = 1.0
+    ps.settings.roughness_endpoint = 0.2
+    ps.settings.roughness_end_shape = 1.0
+    ps.settings.rendered_child_count = 50 
+
+    ps.settings.use_clump_curve = True 
+    clump_hair(ps.settings.clump_curve.curves[0], False)
+
+
+def get_sidehair(ps):
+    ps.settings.type = 'HAIR'
+    ps.settings.child_type = 'SIMPLE'
+    ps.settings.draw_step = 7
+    ps.settings.render_step = 7
+    ps.settings.hair_step = 10; 
+    ps.settings.kink = 'WAVE'
+    ps.settings.kink_frequency = 5
+    ps.settings.kink_amplitude = 0.02
+    ps.settings.count = 0
+    ps.settings.hair_length = 0.8
+    ps.settings.roughness_2 = 0.0
+    ps.settings.roughness_1 = 0.1
+    ps.settings.roughness_2_size = 1.0
+    ps.settings.roughness_endpoint = 0.4
+    ps.settings.roughness_end_shape = 1.0
+    ps.settings.rendered_child_count = 100
+    
+
+def get_box_braids(ps):
+    ps.settings.type = 'HAIR'
+    ps.settings.child_type = 'SIMPLE'
+    ps.settings.draw_step = 10
+    ps.settings.render_step = 10
+    ps.settings.hair_step = 50; 
+    ps.settings.kink = 'BRAID'
+    
+    ps.settings.kink_amplitude = 0.01
+    ps.settings.count = 0
+    ps.settings.hair_length = 0.8
+    length = ps.settings.hair_length
+    ps.settings.kink_frequency = int(math.ceil(length)) * 30
+ 
+
+    ps.settings.roughness_2 = 0.01
+    ps.settings.roughness_1 = 0.0
+    ps.settings.roughness_2_size = 0.1
+    ps.settings.roughness_endpoint = 0.0
+    ps.settings.roughness_end_shape = 1.0
+    ps.settings.child_nbr = 100 
+    ps.settings.rendered_child_count = 100
+    ps.settings.use_clump_curve = True 
+    clump_hair(ps.settings.clump_curve.curves[0], True)
 
 #Creates a particle system if one doesn't already exist 
-def get_particle_system(context, edges):
+def get_particle_system(context, edges, box_braids):  
     
     print("This object already has a particle system")
     #print(context.object.particle_systems[0].name)
@@ -39,57 +111,28 @@ def get_particle_system(context, edges):
     ps = context.object.particle_systems[Afro_count]
     ps.name = new_ps_name
     if(edges):
+        get_sidehair(ps)
+    elif(box_braids):
+        get_box_braids(ps)
+    else:
+        get_Afro(ps)
 
-        ps.settings.type = 'HAIR'
-        ps.settings.child_type = 'SIMPLE'
-        ps.settings.draw_step = 7
-        ps.settings.render_step = 7
-        ps.settings.hair_step = 10; 
-        ps.settings.kink = 'WAVE'
-        ps.settings.kink_frequency = 5
-        ps.settings.kink_amplitude = 0.02
-        ps.settings.count = 0
-        ps.settings.hair_length = 0.8
-        ps.settings.roughness_2 = 0.0
-        ps.settings.roughness_1 = 0.1
-        ps.settings.roughness_2_size = 1.0
-        ps.settings.roughness_endpoint = 0.4
-        ps.settings.roughness_end_shape = 1.0
-        ps.settings.rendered_child_count = 100
+        
+def clump_hair(clump_curve, box_braids):
 
-
+    if(box_braids):
+        clump_curve.points[0].location.x = 0.0
+        clump_curve.points[0].location.y = 0.5
+        clump_curve.points[1].location.x = 1.0
+        clump_curve.points[1].location.y = 1.0
 
 
     else:
-       
-        if ps.settings.use_advanced_hair != True:
-            ps.settings.use_advanced_hair = True
-            ps.settings.factor_random = 0.3
+        clump_curve.points[0].location.x = 0.0
+        clump_curve.points[0].location.y = 0.0
+        clump_curve.points[1].location.x = 1.0
+        clump_curve.points[1].location.y = 1.0
 
-        ps.settings.type = 'HAIR'
-        ps.settings.child_type = 'SIMPLE'
-        ps.settings.draw_step = 7
-        ps.settings.render_step = 7
-        ps.settings.hair_step = 10; 
-        ps.settings.kink = 'CURL'
-        ps.settings.kink_frequency = 30
-        ps.settings.kink_amplitude = 0.04
-        ps.settings.count = 100
-        ps.settings.hair_length = 0.3
-        ps.settings.roughness_2 = 0.9
-        ps.settings.roughness_1 = 0.1
-        ps.settings.roughness_2_size = 1.0
-        ps.settings.roughness_endpoint = 0.4
-        ps.settings.roughness_end_shape = 1.0
-        ps.settings.rendered_child_count = 50 
-
-        ps.settings.use_clump_curve = True 
-        ps.settings.clump_curve.curves[0].points[0].location.x = 0.0
-        ps.settings.clump_curve.curves[0].points[0].location.y = 0.0
-    
-
-        
-    
 
 #creates a new nodegroup for the curve widget interactive UI element 
 def make_node_group(name):
@@ -177,12 +220,10 @@ class AfroRenderPanel (bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         NaturalHair = layout.row()
-        NaturalHair.label(text = "Natural Hair")
-        NaturalHair.operator("object.natural_hair", text = "Natural Hair")
+        NaturalHair.operator("object.natural_hair", text = "Create Afro")
 
         Edges = layout.row()
-        Edges.label(text = "Groom Edges")
-        Edges.operator("object.make_edges", text = "Edges")
+        Edges.operator("object.make_edges", text = "Create Side Hairs or Edges")
 
         # chart_row = layout.row(align =True)
         # chart_row.prop(context.scene, 'hair_chart', expand = True)    
@@ -199,8 +240,7 @@ class AfroRenderPanel (bpy.types.Panel):
             row.operator("object.hair_curve", text="Widget Control")
             
         Braids = layout.row()
-        Braids.label(text = "Generate Braids")
-        Braids.operator("object.braids", text = "Braided Hair")
+        Braids.operator("object.braids", text = "Create Box Braids")
 
 def get_frizz (frizz_val, uniform_val, clump_val, thickness, context):
     print ("Create Frizziness")
@@ -314,7 +354,7 @@ class AfroRender_Edges(bpy.types.Operator):
     group_num = bpy.props.IntProperty(name = "Vertex Group Index", description = "Whichever Vertex Group Artist wants to Afro-ize", default = 0, min= 0)
     def execute (self, context):
         scene = bpy.data.scenes["Scene"]
-        get_particle_system(context, True) 
+        get_particle_system(context, True, False) 
        
         if (self.use_v_groups == True):
             get_vertex_group(context, self.group_num, True) 
@@ -362,7 +402,7 @@ class AfroRender_NaturalHair(bpy.types.Operator):
 
     def execute(self, context):
         scene = bpy.data.scenes["Scene"]
-        get_particle_system(context, False) 
+        get_particle_system(context, False, False) 
         create_hair_type(self.hair_chart, context)
         get_frizz(self.frizziness, self.length_uniformity, self.coiliness, self.thickness, context)
         
@@ -405,7 +445,6 @@ class AfroRender_CurveWidget(bpy.types.Operator):
 
         return {'FINISHED'}
 
-#coming soon! 
 class AfroRender_Braiding(bpy.types.Operator):
 
     bl_idname = "object.braids"
@@ -413,6 +452,7 @@ class AfroRender_Braiding(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        get_particle_system(context, False, True)
 
         print ("braided button pressed")
         return {'FINISHED'}
