@@ -6,17 +6,18 @@ widget_boolean = False
 bpy.types.Scene.use_widget = bpy.props.BoolProperty(name = "Use Widget", description = "Use the Curve Widget to get Hair StrandFrequency/Amplitude", default = False)
 #Hair Chart - Maps all types of hair to menu that the user can see 
 global_afro_count = 0 
+global_ps_count = 0 
+index = 0 
 def count_Afros(context):
     if(context.object.particle_systems == False):
         return 0; 
     
     else:
 
-        Afro_num = 0; 
+        Afro_num = 0;
         for ps in range (len(context.object.particle_systems)):
             if "Afro" in context.object.particle_systems[ps].name:
                 Afro_num += 1; 
-
         global_afro_count = Afro_num
         if(global_afro_count == 0):
             return len(context.object.particle_systems)
@@ -93,14 +94,14 @@ def get_box_braids(ps):
     ps.settings.roughness_end_shape = 1.0
     ps.settings.child_nbr = 100 
     ps.settings.rendered_child_count = 100
+    ps.settings.child_radius= 0.02
     ps.settings.use_clump_curve = True 
     clump_hair(ps.settings.clump_curve.curves[0], True)
 
 #Creates a particle system if one doesn't already exist 
 def get_particle_system(context, edges, box_braids):  
     
-    print("This object already has a particle system")
-    #print(context.object.particle_systems[0].name)
+
 
     Afro_count = count_Afros(context)
     print(Afro_count)
@@ -108,8 +109,11 @@ def get_particle_system(context, edges, box_braids):
     print(new_ps_name)
 
     bpy.ops.object.particle_system_add()
-    ps = context.object.particle_systems[Afro_count]
+    index = len(bpy.context.object.particle_systems) - 1
+
+    ps = context.object.particle_systems[index]
     ps.name = new_ps_name
+    
     if(edges):
         get_sidehair(ps)
     elif(box_braids):
@@ -160,7 +164,8 @@ def create_hair_type(hair_chart, context):
     print(global_afro_count)
     print("Num PS:")
     print(len(bpy.context.object.particle_systems))
-    ps = bpy.context.object.particle_systems[global_afro_count - 1]
+    index = len(bpy.context.object.particle_systems) - 1
+    ps = bpy.context.object.particle_systems[index]
     
     if hair_chart == "0":
         print("2A")
@@ -245,7 +250,8 @@ class AfroRenderPanel (bpy.types.Panel):
 def get_frizz (frizz_val, uniform_val, clump_val, thickness, context):
     print ("Create Frizziness")
     global_afro_count = count_Afros(context)
-    ps = bpy.context.object.particle_systems[global_afro_count - 1].settings
+    index = len(bpy.context.object.particle_systems) - 1
+    ps = bpy.context.object.particle_systems[index].settings
     if (frizz_val > 0):
 
         
@@ -277,7 +283,8 @@ def get_frizz (frizz_val, uniform_val, clump_val, thickness, context):
 
 def get_simulation(context, hair_chart):
     global_afro_count = count_Afros(context)
-    ps = bpy.context.object.particle_systems[global_afro_count - 1]
+    index = len(bpy.context.object.particle_systems) - 1
+    ps = bpy.context.object.particle_systems[index]
     #hair_chart = int(hair_chart)
     print(hair_chart[0])
     print("Computing Simulation Parameters...") 
@@ -313,7 +320,8 @@ def get_simulation(context, hair_chart):
 
 def get_vertex_group(context, group_ind, edges):
     global_afro_count = count_Afros(context)
-    ps = context.object.particle_systems[global_afro_count - 1]
+    index = len(bpy.context.object.particle_systems) - 1
+    ps = context.object.particle_systems[index]
     print("in vertex group function...")
     print(ps.vertex_group_density) 
     if len(context.object.vertex_groups) > 0:
@@ -323,7 +331,7 @@ def get_vertex_group(context, group_ind, edges):
 
 def create_edge_particle_system(context, edge_chart):
     global_afro_count = count_Afros(context)
-    ps = bpy.context.object.particle_systems[global_afro_count - 1]
+    ps = bpy.context.object.particle_systems[index]
     if edge_chart == "0":
         print("2A")
         ps.settings.kink_frequency = 1
