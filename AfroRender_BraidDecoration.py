@@ -7,6 +7,11 @@ from mathutils import Vector
 
 def stack_beads(ps, context, amplitude):
     print("stacking beads...")
+    hairs = ps.particles
+    for i, h in enumerate(hairs): 
+        print('hair number {i}:'.format(i=i))
+        for i, hv in enumerate(h.hair_keys):
+            print('  vertex {i} coordinates: {co}'.format(i=i, co=hv.co))
     #make sure the number of keys in each strand is at least 50. 
     #for each hair strand get the keys. 
     #for every key with index greater than num_beads_on_each_braid(user-specified) 
@@ -35,13 +40,19 @@ def check_name(name):
 
     return False
 
-
+#main execution 
 class AfroRender_BraidDecorations(bpy.types.Operator):
     bl_idname = "object.braid_decoration"
     bl_label = "Add Beads or Rings to Braids/Dreads"
     bl_options = {'REGISTER', 'UNDO', 'PRESET'}
 
+    #Number of particle systems currently on the object
     num_ps = len(bpy.context.object.particle_systems) - 1
+
+    #Three different beading patterns to choose from:
+        #1. Random Distrbution - randomly distributes beads or rings about particle system (call distribute_beads function) 
+        #2. Stacked Beads - stack beads at the bottom of each braid (call stack_beads function)
+        #3. Cornrow Rings - same thing as random distribution but orients selected ring geometry to be almost perpendicular to braid (call cornrow_rings)
     beading_patterns = bpy.props.EnumProperty(
                                 name = "Bead Patterns",
                                 default = "0",
@@ -52,11 +63,18 @@ class AfroRender_BraidDecorations(bpy.types.Operator):
                                     ("2", "Rings", "Overhanging Rings", 2),
                                     ]
                             )
+    #Name of the bead geometry in hiearchy of all objects in the scene 
     bead_name = bpy.props.StringProperty(name = "Bead Object Name", description = "Insert the name of the object to be distributed along the braids", default = "Bead_1") 
+   
+    #Index of Particle System to add beads to 
     particle_system_index = bpy.props.IntProperty(name = "Particle System Index", description = "Index of Particle System to distribute Beads on", min = 0, max = num_ps, default = 0)
-    
+   
+    #Number of beads to distribute. If the user wants to stack beads, this will be the number of beads per stand. Otherwise, it's the total number of beads in the particle system. 
+    num_beads = bpy.props.IntProperty(name = "Number of Beads", description = "Input the number of beads you want distributed or stacked per braid", min = 1, max = 500, default = 10)
+
     def execute(self, context): 
         
+        #checks if the specifed bead object exists 
         if(check_name(self.bead_name) == False):
             print("Please enter the correct name of the bead or ring.")
             return {'FINISHED'}
@@ -64,29 +82,38 @@ class AfroRender_BraidDecorations(bpy.types.Operator):
         else:
             bpy.data.objects[self.bead_name].select = True
             
-        
+        #selected object
         target = context.object
         
+        #checks if user has created a particle system 
         if(target.particle_systems == False):
             print("No particle system on this object.")
             return {'FINISHED'}
 
         ps = target.particle_systems[self.particle_system_index]
         print(ps.settings.kink)
+
+        #checks if beading is possible with the specified particle system 
         if(ps.settings.kink != 'BRAID'):
             print("Please create an adequate braiding or dreadlock groom before proceeding.")
             return {'FINISHED'}
+
 
         amp = ps.settings.kink_amplitude
         freq = ps.settings.kink_frequency
         num_segments = ps.settings.hair_step
 
         
-        hairs = ps.particles
-        for i, h in enumerate(hairs): 
-            print('hair number {i}:'.format(i=i))
-            for i, hv in enumerate(h.hair_keys):
-                print('  vertex {i} coordinates: {co}'.format(i=i, co=hv.co))
+
+        if self.beading_patterns = "1":
+            stack_beads(ps, context, amp)
+        
+        elif self.beading_patterns = "0":
+            distribute_beads(ps, context, amp)
+        
+        elif self.beading_patterns = "2":
+            cornrow_rings(ps, context, amp)
+
 
 
         return {'FINISHED'}
@@ -105,7 +132,7 @@ class AfroRender_BraidDecoPanel(bpy.types.Panel):
 
         layout = self.layout
         Beads = layout.row()
-        Beads.operator("object.braid_decoration", text = "Add Beads at Random Points")
+        Beads.operator("object.braid_decoration", text = "Add Beads")
 
 
 
