@@ -4,10 +4,43 @@ import pdb
 import numpy as np
 from mathutils import Vector
 
+scene = bpy.context.scene
+#make a group of bead objects. 
+def bead_grouping(context, num_beads, bead):
+    print("grouping beads...")
+    bead.location[0] = 0.0
+    bead.location[1] = 0.0
+    bead.location[2] = 0.0
+    bead_group = bpy.data.groups.new("Bead_Group_1") 
+    bead_group.objects.link(bead)
+    return bead_group
+
+def bead_instancing(context, group, bead, position):
+    print("instancing beads...")
+    bpy.ops.object.group_instance_add(name=group.name)
+    
+    new_instance = bpy.data.objects.new("Instance", None)
+    new_instance.dupli_type = 'GROUP'
+    new_instance.dupli_group = group
+    new_instance.location = position
+    
+    scene.objects.link(new_instance)
+    scene.update()
+
+
+    print("got through bead instancing function")
+
+    #for every time there is a hair point/seg at the appropriate position, instance a bead. 
+
+
+
 
 def stack_beads(ps, context, num_beads, bead):
 
     bead.select = True 
+    group = bead_grouping(context, num_beads, bead)
+    
+
     amp = ps.settings.kink_amplitude
     print(amp)
 
@@ -29,8 +62,9 @@ def stack_beads(ps, context, num_beads, bead):
             start_index = num_keys - num_beads
             if i >= start_index:
                 print("add a bead to the strand at this time")
-
-            print('  vertex {i} coordinates: {co}'.format(i=i, co=hv.co))
+               # print('  vertex {i} coordinates: {co}'.format(i=i, co=hv.co))
+                bead_instancing(context, group, bead, hv.co)
+                
     #make sure the number of keys in each strand is at least 50. 
     #for each hair strand get the keys. 
     #for every key with index greater than num_beads_on_each_braid(user-specified) 
