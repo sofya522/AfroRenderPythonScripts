@@ -29,21 +29,19 @@ def create_stack(bead_obj, num_beads, bead_group):
         bead_group.objects.link(new_bead)
         prev = new_bead
 
-def bead_instancing(context, group, bead, position, hair_index, use_offset, num_beads, prev_position):
+def bead_instancing(context, group, bead, hair_index, position):
     print("instancing beads...")
     only_render_in_display()
     
     new_instance = bpy.data.objects.new("Instance", None)
     new_instance.dupli_type = 'GROUP'
     new_instance.dupli_group = group
-    new_instance.location = position 
+    new_instance.location = position
     scene.objects.link(new_instance)
     scene.update()
 
 
     print("got through bead instancing function")
-
-    #for every time there is a hair point/seg at the appropriate position, instance a bead. 
 
 
 
@@ -81,11 +79,11 @@ def stack_beads(ps, context, num_beads, bead, randomize):
         for i, hv in enumerate(h.hair_keys):
 
             start_index = num_keys - num_beads
-            if i >= start_index:
+            if i == start_index:
                 print("add a bead to the strand at this time")
-                offset = True if i != start_index else False 
+                 
                # print('  vertex {i} coordinates: {co}'.format(i=i, co=hv.co))
-                #bead_instancing(context, group, bead, hv.co, curr_hair, offset, num_beads, prev)
+                bead_instancing(context, group, bead, curr_hair, hv.co)
                 prev= hv.co
                 
     #make sure the number of keys in each strand is at least 50. 
