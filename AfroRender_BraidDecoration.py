@@ -6,11 +6,22 @@ from mathutils import Vector
 
 scene = bpy.context.scene
 #make a group of bead objects. 
-def bead_grouping(context, num_beads, bead, randomize):
+
+def get_dir(particle):
+    a = particle.hair_keys[0].co
+    b = particle.hair_keys[1].co
+    c = - a + b
+    d = c/np.sqrt(c[0]**2 + c[1]**2 +c[2]**2 )
+    print(d)
+    return d
+
+def bead_grouping(ps, context, num_beads, bead, randomize):
     print("grouping beads...")
     bead.location[0] = 0.0
     bead.location[1] = 0.0
     bead.location[2] = 0.0
+
+    
     bead_group = bpy.data.groups.new("Bead_Stack")
     bead_group.objects.link(bead)
     create_stack(bead, num_beads, bead_group)
@@ -19,6 +30,7 @@ def bead_grouping(context, num_beads, bead, randomize):
 def create_stack(bead_obj, num_beads, bead_group):
     
     offset = bead_obj.dimensions[2]  
+    print(offset)
     prev = bead_obj  
     for i in range (0,num_beads):
         new_bead= bead_obj.copy()
@@ -29,14 +41,18 @@ def create_stack(bead_obj, num_beads, bead_group):
         bead_group.objects.link(new_bead)
         prev = new_bead
 
-def bead_instancing(context, group, bead, hair_index, position):
+def bead_instancing(context, group, bead, hair, position):
     print("instancing beads...")
-    only_render_in_display()
+    #only_render_in_display()
     
     new_instance = bpy.data.objects.new("Instance", None)
     new_instance.dupli_type = 'GROUP'
     new_instance.dupli_group = group
     new_instance.location = position
+    v1 = get_dir(hair) 
+    v0 = Vector((0,0,1))
+    rot = v0.rotation_difference(v1).to_euler()
+    new_instance.rotation_euler = rot 
     scene.objects.link(new_instance)
     scene.update()
 
@@ -55,7 +71,7 @@ def only_render_in_display():
 def stack_beads(ps, context, num_beads, bead, randomize):
 
     bead.select = True 
-    group = bead_grouping(context, num_beads, bead, randomize)
+    group = bead_grouping(ps, context, num_beads, bead, randomize)
     
 
     amp = ps.settings.kink_amplitude
@@ -65,14 +81,14 @@ def stack_beads(ps, context, num_beads, bead, randomize):
     if check_hairs(ps) != True:
         print("returning false. ")
         return False 
-    hairs = context.object.particle_systems[1].particles
-    print(context.object.particle_systems[1].name)
-    print(hairs[0].hair_keys[1].co.x)
+    hairs = context.object.particle_systems[0].particles
+    print(context.object.particle_systems[0].name)
+    print(hairs[0].hair_keys[0].co.x)
     for i, h in enumerate(hairs): 
         print('hair number {i}:'.format(i=i))
         num_keys = len(h.hair_keys)
         curr_hair = i
-        if(num_keys < 50): 
+        if(num_keys < 3): 
             print("Not enough keys on this strand.")
             continue 
         prev = h.hair_keys[0].co
@@ -83,7 +99,7 @@ def stack_beads(ps, context, num_beads, bead, randomize):
                 print("add a bead to the strand at this time")
                  
                # print('  vertex {i} coordinates: {co}'.format(i=i, co=hv.co))
-                bead_instancing(context, group, bead, curr_hair, hv.co)
+                bead_instancing(context, group, bead, h, hv.co)
                 prev= hv.co
                 
     #make sure the number of keys in each strand is at least 50. 
@@ -116,6 +132,8 @@ def check_name(name):
             return True 
 
     return False
+
+
 
 def check_hairs(ps):
     hairs = ps.particles 
@@ -154,7 +172,7 @@ class AfroRender_BraidDecorations(bpy.types.Operator):
     particle_system_index = bpy.props.IntProperty(name = "Particle System Index", description = "Index of Particle System to distribute Beads on", min = 0, max = num_ps, default = 1)
    
     #Number of beads to distribute. If the user wants to stack beads, this will be the number of beads per stand. Otherwise, it's the total number of beads in the particle system. 
-    num_beads = bpy.props.IntProperty(name = "Number of Beads", description = "Input the number of beads you want distributed or stacked per braid", min = 1, max = 500, default = 10)
+    num_beads = bpy.props.IntProperty(name = "Number of Beads", description = "Input the number of beads you want distributed or stacked per braid", min = 1, max = 10, default = 5)
 
     #Randomization of Beads or use multiple bead types. 
         #--->With this parameter, this tool will check if there are multiple types of beads. (ie, objects with Bead 1, Bead 2, etc)
@@ -179,7 +197,7 @@ class AfroRender_BraidDecorations(bpy.types.Operator):
             print("No particle system on this object.")
             return {'FINISHED'}
 
-        ps = target.particle_systems[self.particle_system_index]
+        ps = target.particle_systems[0]
         print(ps.settings.kink)
 
         #checks if beading is possible with the specified particle system 
