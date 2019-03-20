@@ -30,7 +30,7 @@ bpy.types.Scene.bead_name = bpy.props.StringProperty(name = "Bead Object Name", 
 bpy.types.Scene.particle_system_index = bpy.props.IntProperty(name = "Particle System Index", description = "Index of Particle System to distribute Beads on", min = 0, max = 5)
    
     #Number of beads to distribute. If the user wants to stack beads, this will be the number of beads per stand. Otherwise, it's the total number of beads in the particle system. 
-bpy.types.Scene.num_beads = bpy.props.IntProperty(name = "Number of Beads", description = "Input the number of beads you want distributed or stacked per braid", min = 1, max = 10)
+bpy.types.Scene.num_beads = bpy.props.IntProperty(name = "Number of Beads", description = "Input the number of beads you want distributed or stacked per braid", min = 1, max = 100)
 
     #Randomization of Beads or use multiple bead types. 
         #--->With this parameter, this tool will check if there are multiple types of beads. (ie, objects with Bead 1, Bead 2, etc)
@@ -86,7 +86,6 @@ def bead_instancing(context, group, bead, hair, position):
     rot = v0.rotation_difference(v1).to_euler()
     new_instance.rotation_euler = rot 
     scene.objects.link(new_instance)
-    scene.update()
 
 
     print("got through bead instancing function")
@@ -152,13 +151,13 @@ def distribute_beads(ps, context, num_beads, bead):
     #hairs = context.object.particle_systems[scene.particle_system_index].particles
     hairs = context.object.particle_systems[0].particles
     for i in range(0, num_beads): 
-        print(num_beads)
-        random_hair = hairs[random.randrange(len(hairs) - 1)]
+        random_hair = hairs[random.randrange(len(hairs))]
         random_segment = random_hair.hair_keys[random.randrange(len(random_hair.hair_keys) - 1)] 
         new_pos = random_segment.co
 
-        new_bead= bead.copy()
+        new_bead = bead.copy()
         new_bead.data = bead.data.copy()
+
         new_bead.location = new_pos
         v1 = get_dir(random_hair)
         v0 = Vector((0,0,1))
@@ -258,6 +257,7 @@ class AfroRender_BraidDecoPanel(bpy.types.Panel):
     bl_idname = "OBJECT_PT_hello" 
     bl_region_type = 'WINDOW'
     bl_context = "particle"
+
 
     def draw(self, context):
 
