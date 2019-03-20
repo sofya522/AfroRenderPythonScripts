@@ -3,8 +3,39 @@ from math import degrees, floor
 import pdb
 import numpy as np
 from mathutils import Vector
+import random
 
 scene = bpy.context.scene
+#Number of particle systems currently on the object
+
+
+    #Three different beading patterns to choose from:
+        #1. Random Distrbution - randomly distributes beads or rings about particle system (call distribute_beads function) 
+        #2. Stacked Beads - stack beads at the bottom of each braid (call stack_beads function)
+        #3. Cornrow Rings - same thing as random distribution but orients selected ring geometry to be almost perpendicular to braid (call cornrow_rings)
+bpy.types.Scene.beading_patterns = bpy.props.EnumProperty(
+                                name = "Bead Patterns",
+                                default = "1",
+                                description = "Distributing Beads" ,
+                                items = [
+                                    ("0", "Random", "Randomly distribute beads", 0),
+                                    ("1", "Stacks", "Distribute beads at the bottom of each braid", 1),
+                                    ("2", "Rings", "Overhanging Rings", 2),
+                                    ]
+                            )
+    #Name of the bead geometry in hiearchy of all objects in the scene 
+bpy.types.Scene.bead_name = bpy.props.StringProperty(name = "Bead Object Name", description = "Insert the name of the object to be distributed along the braids", default = "Bead_1") 
+   
+    #Index of Particle System to add beads to 
+bpy.types.Scene.particle_system_index = bpy.props.IntProperty(name = "Particle System Index", description = "Index of Particle System to distribute Beads on", min = 0, max = 5)
+   
+    #Number of beads to distribute. If the user wants to stack beads, this will be the number of beads per stand. Otherwise, it's the total number of beads in the particle system. 
+bpy.types.Scene.num_beads = bpy.props.IntProperty(name = "Number of Beads", description = "Input the number of beads you want distributed or stacked per braid", min = 1, max = 10)
+
+    #Randomization of Beads or use multiple bead types. 
+        #--->With this parameter, this tool will check if there are multiple types of beads. (ie, objects with Bead 1, Bead 2, etc)
+        #---> otherwise, if there is only one type of bead, will randomly scale each instance of a bead. 
+bpy.types.Scene.randomize_beads = bpy.props.BoolProperty(name = "Randomization of Beads in Stack", description = "If activated, there will be more than 1 type of bead in stack", default = False)
 #make a group of bead objects. 
 
 def get_dir(particle):
@@ -49,6 +80,7 @@ def bead_instancing(context, group, bead, hair, position):
     new_instance.dupli_type = 'GROUP'
     new_instance.dupli_group = group
     new_instance.location = position
+
     v1 = get_dir(hair) 
     v0 = Vector((0,0,1))
     rot = v0.rotation_difference(v1).to_euler()
@@ -95,7 +127,8 @@ def stack_beads(ps, context, num_beads, bead, randomize):
         for i, hv in enumerate(h.hair_keys):
 
             start_index = num_keys - num_beads
-            if i == start_index:
+            print(start_index)
+            if i == abs(start_index):
                 print("add a bead to the strand at this time")
                  
                # print('  vertex {i} coordinates: {co}'.format(i=i, co=hv.co))
@@ -115,6 +148,26 @@ def stack_beads(ps, context, num_beads, bead, randomize):
 
 def distribute_beads(ps, context, num_beads, bead):
     print("distributing beads...")
+    bead.select = True
+    #hairs = context.object.particle_systems[scene.particle_system_index].particles
+    hairs = context.object.particle_systems[0].particles
+    for i in range(0, num_beads): 
+        print(num_beads)
+        random_hair = hairs[random.randrange(len(hairs) - 1)]
+        random_segment = random_hair.hair_keys[random.randrange(len(random_hair.hair_keys) - 1)] 
+        new_pos = random_segment.co
+
+        new_bead= bead.copy()
+        new_bead.data = bead.data.copy()
+        new_bead.location = new_pos
+        v1 = get_dir(random_hair)
+        v0 = Vector((0,0,1))
+        rot = v0.rotation_difference(v1).to_euler()
+        new_bead.rotation_euler = rot 
+        scene.objects.link(new_bead)
+
+
+
     #not all braids have beads or rings. 
     #on a strand that does have beads or rings, they are not stacked. they are placed randomly and sparsely. 
     #for the number of beads to be distributed:
@@ -148,46 +201,17 @@ class AfroRender_BraidDecorations(bpy.types.Operator):
     bl_label = "Add Beads or Rings to Braids/Dreads"
     bl_options = {'REGISTER', 'UNDO', 'PRESET'}
 
-    #Number of particle systems currently on the object
-    num_ps = len(bpy.context.object.particle_systems) - 1
-
-    #Three different beading patterns to choose from:
-        #1. Random Distrbution - randomly distributes beads or rings about particle system (call distribute_beads function) 
-        #2. Stacked Beads - stack beads at the bottom of each braid (call stack_beads function)
-        #3. Cornrow Rings - same thing as random distribution but orients selected ring geometry to be almost perpendicular to braid (call cornrow_rings)
-    beading_patterns = bpy.props.EnumProperty(
-                                name = "Bead Patterns",
-                                default = "1",
-                                description = "Distributing Beads" ,
-                                items = [
-                                    ("0", "Random", "Randomly distribute beads", 0),
-                                    ("1", "Stacks", "Distribute beads at the bottom of each braid", 1),
-                                    ("2", "Rings", "Overhanging Rings", 2),
-                                    ]
-                            )
-    #Name of the bead geometry in hiearchy of all objects in the scene 
-    bead_name = bpy.props.StringProperty(name = "Bead Object Name", description = "Insert the name of the object to be distributed along the braids", default = "Bead_1") 
-   
-    #Index of Particle System to add beads to 
-    particle_system_index = bpy.props.IntProperty(name = "Particle System Index", description = "Index of Particle System to distribute Beads on", min = 0, max = num_ps, default = 1)
-   
-    #Number of beads to distribute. If the user wants to stack beads, this will be the number of beads per stand. Otherwise, it's the total number of beads in the particle system. 
-    num_beads = bpy.props.IntProperty(name = "Number of Beads", description = "Input the number of beads you want distributed or stacked per braid", min = 1, max = 10, default = 5)
-
-    #Randomization of Beads or use multiple bead types. 
-        #--->With this parameter, this tool will check if there are multiple types of beads. (ie, objects with Bead 1, Bead 2, etc)
-        #---> otherwise, if there is only one type of bead, will randomly scale each instance of a bead. 
-    randomize_beads = bpy.props.BoolProperty(name = "Randomization of Beads in Stack", description = "If activated, there will be more than 1 type of bead in stack", default = False)
+    
     
     def execute(self, context): 
         
         #checks if the specifed bead object exists 
-        if(check_name(self.bead_name) == False):
+        if(check_name(scene.bead_name) == False):
             print("Please enter the correct name of the bead or ring.")
             return {'FINISHED'}
         
         else:
-            bead_object = bpy.data.objects[self.bead_name]
+            bead_object = bpy.data.objects[scene.bead_name]
             
         #selected object
         target = context.object
@@ -212,14 +236,14 @@ class AfroRender_BraidDecorations(bpy.types.Operator):
 
         
 
-        if self.beading_patterns == "1":
-            stack_beads(ps, context, self.num_beads, bead_object, self.randomize_beads)
+        if scene.beading_patterns == "1":
+            stack_beads(ps, context, scene.num_beads, bead_object, scene.randomize_beads)
         
-        elif self.beading_patterns == "0":
-            distribute_beads(ps, context, self.num_beads, bead_object)
+        elif scene.beading_patterns == "0":
+            distribute_beads(ps, context, scene.num_beads, bead_object)
         
-        elif self.beading_patterns == "2":
-            cornrow_rings(ps, context, self.num_beads, bead_object)
+        elif scene.beading_patterns == "2":
+            cornrow_rings(ps, context, scene.num_beads, bead_object)
 
 
 
@@ -240,6 +264,22 @@ class AfroRender_BraidDecoPanel(bpy.types.Panel):
         layout = self.layout
         Beads = layout.row()
         Beads.operator("object.braid_decoration", text = "Add Beads")
+
+        row = self.layout.row(align=True)
+        row.prop(context.scene,"beading_patterns")
+
+        row = self.layout.row(align=True)
+        row.prop(context.scene, "bead_name")
+
+        row = self.layout.row(align=True)
+        row.prop(context.scene, "particle_system_index")
+
+        row = self.layout.row(align=True)
+        row.prop(context.scene, "num_beads")
+
+        row = self.layout.row(align=True)
+        row.prop(context.scene, "randomize_beads")
+
 
 
 
